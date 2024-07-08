@@ -3,7 +3,7 @@
     <div v-if="props.isVisible" class="modal">
         <div class="modal-content">
             <span class="close" @click="closeModal">&times;</span>
-            <img :src="props.imageSrc" alt="Cat Image">
+            <img :src="props.imageSrc">
         </div>
     </div>
 </template>
@@ -21,10 +21,11 @@
     };
 </script>
 
-
 <style>
 .modal {
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: fixed;
     z-index: 1;
     left: 0;
@@ -32,22 +33,27 @@
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgb(0,0,0);
     background-color: rgba(0,0,0,0.4);
 }
 
 .modal-content {
     position: relative;
-    margin: auto;
-    padding: 0;
-    width: 80%;
-    max-width: 500px;
+    background-color: #fefefe;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: auto;
+    height: auto;
+    max-width: 80%;
+    max-height: 80%;
+    overflow: auto;
+    border-radius: 8px;
+    text-align: center;
 }
 
 .close {
     position: absolute;
-    right: 10px;
     top: 10px;
+    right: 10px;
     color: #aaa;
     font-size: 28px;
     font-weight: bold;
@@ -55,14 +61,18 @@
 }
 
 .close:hover,
-    .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-    }
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
 
-    img {
+img {
     width: 100%;
-    height: auto;
-    }
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
 </style>
