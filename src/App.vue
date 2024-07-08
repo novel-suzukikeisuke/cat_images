@@ -65,6 +65,7 @@ onMounted(() => {
 
 img {
   width: 100%;
-  height: auto;
+  height: 200px;
+  object-fit: cover;
 }
 </style>
