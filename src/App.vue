@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="containar">
     <h1>猫</h1>
     <div>
       <select v-model="selectedTag">
@@ -52,6 +52,13 @@ onMounted(() => {
 </script>
 
 <style>
+.containar {
+  position: absolute;
+  top: 50px;
+  left: 20%;
+  right: 20%;
+}
+
 .images-container {
   display: flex;
   flex-wrap: wrap;
@@ -65,6 +72,7 @@ onMounted(() => {
 
 img {
   width: 100%;
-  height: auto;
+  height: 200px;
+  object-fit: cover;
 }
 </style>
