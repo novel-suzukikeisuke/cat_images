@@ -9,18 +9,23 @@
     </div>
     <div class="images-container">
       <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
-        <img :src="`https://cataas.com/cat/${catImage._id}`" >
+        <img :src="`https://cataas.com/cat/${catImage._id}`" @click="openModal(catImage._id)" >
         <p>{{catImage.tags}}</p>
       </div>
     </div>
+    <Modal :isVisible="isModalVisible" :imageSrc="selectedImageSrc" @close="closeModal"/>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import Modal from './components/Modal.vue';
 
 const catImages = ref([]);
 const selectedTag = ref('');
+const isModalVisible = ref(false);
+const selectedImageSrc = ref('');
+
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
   return [...new Set(tags)];
@@ -45,6 +50,16 @@ const fetchCatImages = async () => {
     console.error(error);
   }
 }
+
+const openModal = (imageId: string) => {
+  selectedImageSrc.value = `https://cataas.com/cat/${imageId}`;
+  isModalVisible.value = true;
+};
+
+const closeModal = () => {
+  isModalVisible.value = false;
+  selectedImageSrc.value = '';
+};
 
 onMounted(() => {
   fetchCatImages();
