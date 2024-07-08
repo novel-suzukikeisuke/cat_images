@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="containar">
     <h1>猫</h1>
     <div>
       <select v-model="selectedTag">
@@ -67,6 +67,13 @@ const closeModal = () => {
 </script>
 
 <style>
+.containar {
+  position: absolute;
+  top: 20px;
+  left: 20%;
+  right: 20%;
+}
+
 .images-container {
   display: flex;
   flex-wrap: wrap;
