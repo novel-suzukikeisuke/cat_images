@@ -8,7 +8,7 @@
       </select>
     </div>
     <div class="images-container">
-      <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-container">
+      <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
         <img :src="`https://cataas.com/cat/${catImage._id}`" >
         <p>{{catImage.tags}}</p>
       </div>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 const catImages = ref([]);
 const selectedTag = ref('');
@@ -46,7 +46,9 @@ const fetchCatImages = async () => {
   }
 }
 
-fetchCatImages();
+onMounted(() => {
+  fetchCatImages();
+});
 </script>
 
 <style>
@@ -56,7 +58,7 @@ fetchCatImages();
   gap: 10px;
 }
 
-.image-container {
+.image-card {
   flex: 1 1 calc(25% - 10px);
   max-width: calc(25% - 10px);
 }
