@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="containar">
     <h1>猫</h1>
     <div>
       <select v-model="selectedTag">
@@ -8,19 +8,24 @@
       </select>
     </div>
     <div class="images-container">
-      <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-container">
-        <img :src="`https://cataas.com/cat/${catImage._id}`" >
+      <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
+        <img :src="`https://cataas.com/cat/${catImage._id}`" @click="openModal(catImage._id)" >
         <p>{{catImage.tags}}</p>
       </div>
     </div>
+    <Modal :isVisible="isModalVisible" :imageSrc="selectedImageSrc" @close="closeModal"/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import Modal from './components/Modal.vue';
 
 const catImages = ref([]);
 const selectedTag = ref('');
+const isModalVisible = ref(false);
+const selectedImageSrc = ref('');
+
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
   return [...new Set(tags)];
@@ -46,23 +51,43 @@ const fetchCatImages = async () => {
   }
 }
 
-fetchCatImages();
+const openModal = (imageId: string) => {
+  selectedImageSrc.value = `https://cataas.com/cat/${imageId}`;
+  isModalVisible.value = true;
+};
+
+const closeModal = () => {
+  isModalVisible.value = false;
+  selectedImageSrc.value = '';
+};
+
+onMounted(() => {
+  fetchCatImages();
+});
 </script>
 
 <style>
+.containar {
+  position: absolute;
+  top: 50px;
+  left: 20%;
+  right: 20%;
+}
+
 .images-container {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-.image-container {
+.image-card {
   flex: 1 1 calc(25% - 10px);
   max-width: calc(25% - 10px);
 }
 
 img {
   width: 100%;
-  height: auto;
+  height: 200px;
+  object-fit: cover;
 }
 </style>
