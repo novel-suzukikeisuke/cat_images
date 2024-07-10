@@ -40,8 +40,8 @@
   background-color: #fefefe;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: calc(100vw - 40px);
-  max-height: calc(100vh - 40px);
+  width: auto;
+  height: 50%;
   overflow: auto;
   border-radius: 8px;
   text-align: center;
@@ -66,8 +66,8 @@
 }
 
 .modal-img {
-  max-width: 100%;
-  max-height: calc(100vh - 80px);
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   border-radius: 8px;
 }
