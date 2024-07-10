@@ -7,6 +7,9 @@
         <option v-for="tag in uniqueTags" :key="tag" :value="tag">{{ tag }}</option>
       </select>
     </div>
+    <div>
+      <input type="text" v-model="searchQuery" placeholder="検索する">
+    </div>
     <div class="images-container">
       <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
         <img :src="`${IMAGE_URL_PREFIX}${catImage._id}`" @click="openModal(catImage._id)" >
@@ -34,22 +37,31 @@ const selectedTag = ref('');
 const isModalVisible = ref(false);
 const selectedImageSrc = ref('');
 const favorites = ref(new Set<string>());
+const searchQuery = ref('');
 
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
   const uniqueTagsSet = new Set(tags);
   uniqueTagsSet.add(FAVORITE_TAG);
-  return [...uniqueTagsSet]; //再度...検索
+  return [...uniqueTagsSet];
 });
 
 const filteredCatImages = computed(() => {
+  let filteredImages = catImages.value;
+
   if (selectedTag.value === FAVORITE_TAG) {
-    return catImages.value.filter(catImage => favorites.value.has(catImage._id));
+    filteredImages = filteredImages.filter(catImage => favorites.value.has(catImage._id));
+  } else if (selectedTag.value) {
+    filteredImages = filteredImages.filter(catImage => catImage.tags.includes(selectedTag.value));
   }
-  if (!selectedTag.value) {
-    return catImages.value;
+
+  if (searchQuery.value) {
+    filteredImages = filteredImages.filter(catImage => 
+      catImage.tags.some(tag => tag.includes(searchQuery.value))
+    );
   }
-  return catImages.value.filter(catImage => catImage.tags.includes(selectedTag.value));
+
+  return filteredImages;
 });
 
 const fetchCatImages = async () => {
@@ -147,5 +159,13 @@ button.favorite {
 
 button.favorite:hover {
   background-color: #ff3333;
+}
+
+input[type="text"] {
+  padding: 10px;
+  margin: 10px 0;
+  width: 20%;
+  height: 20px;
+  box-sizing: border-box;
 }
 </style>
