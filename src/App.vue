@@ -11,6 +11,9 @@
       <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
         <img :src="`https://cataas.com/cat/${catImage._id}`" @click="openModal(catImage._id)" >
         <p>{{catImage.tags}}</p>
+        <button @click="toggleFavorite(catImage._id)" :class="{ favorite: isFavorite(catImage._id) }">
+          {{ isFavorite(catImage._id) ? 'お気に入りから削除' : 'お気に入りに追加' }}
+        </button>
       </div>
     </div>
     <Modal :isVisible="isModalVisible" :imageSrc="selectedImageSrc" @close="closeModal"/>
@@ -25,13 +28,19 @@ const catImages = ref([]);
 const selectedTag = ref('');
 const isModalVisible = ref(false);
 const selectedImageSrc = ref('');
+const favorites = ref(new Set<string>());
 
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
-  return [...new Set(tags)];
+  const uniqueTagsSet = new Set(tags);
+  uniqueTagsSet.add('お気に入り');
+  return [...uniqueTagsSet];
 });
 
 const filteredCatImages = computed(() => {
+  if (selectedTag.value === 'お気に入り') {
+    return catImages.value.filter(catImage => favorites.value.has(catImage._id));
+  }
   if (!selectedTag.value) {
     return catImages.value;
   }
@@ -59,6 +68,18 @@ const openModal = (imageId: string) => {
 const closeModal = () => {
   isModalVisible.value = false;
   selectedImageSrc.value = '';
+};
+
+const toggleFavorite = (imageId: string) => {
+  if (favorites.value.has(imageId)) {
+    favorites.value.delete(imageId);
+  } else {
+    favorites.value.add(imageId);
+  }
+};
+
+const isFavorite = (imageId: string) => {
+  return favorites.value.has(imageId);
 };
 
 onMounted(() => {
@@ -89,5 +110,25 @@ img {
   width: 100%;
   height: 200px;
   object-fit: cover;
+}
+
+button {
+  background-color: #ffeb3b;
+  border: none;
+  padding: 5px 10px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #fdd835;
+}
+
+button.favorite {
+  background-color: #ff6666;
+}
+
+button.favorite:hover {
+  background-color: #ff3333;
 }
 </style>
