@@ -8,6 +8,7 @@
 </template>
 
 <script setup lang="ts">
+//const close = 1 定数で定義する
   const props = defineProps({
     isVisible: Boolean,
     imageSrc: String
