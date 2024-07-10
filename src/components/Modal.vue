@@ -8,15 +8,17 @@
 </template>
 
 <script setup lang="ts">
+  const CLOSE_EVENT = 'close';
+
   const props = defineProps({
     isVisible: Boolean,
     imageSrc: String
   });
 
-  const emit = defineEmits(['close']);
+  const emit = defineEmits([CLOSE_EVENT]);
 
   const closeModal = () => {
-    emit('close');
+    emit(CLOSE_EVENT);
   };
 </script>
 

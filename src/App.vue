@@ -1,5 +1,5 @@
 <template>
-  <div class="containar">
+  <div class="container">
     <h1>猫</h1>
     <div>
       <select v-model="selectedTag">
@@ -9,7 +9,7 @@
     </div>
     <div class="images-container">
       <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
-        <img :src="`https://cataas.com/cat/${catImage._id}`" @click="openModal(catImage._id)" >
+        <img :src="`${IMAGE_URL_PREFIX}${catImage._id}`" @click="openModal(catImage._id)" >
         <p>{{catImage.tags}}</p>
         <button @click="toggleFavorite(catImage._id)" :class="{ favorite: isFavorite(catImage._id) }">
           {{ isFavorite(catImage._id) ? 'お気に入りから削除' : 'お気に入りに追加' }}
@@ -24,6 +24,11 @@
 import { ref, computed, onMounted } from 'vue';
 import Modal from './components/Modal.vue';
 
+const FAVORITE_TAG = 'お気に入り';
+const CAT_API_URL = 'https://cataas.com/api/cats';
+const IMAGE_URL_PREFIX = 'https://cataas.com/cat/';
+const FAVORITES_KEY = 'favorites';
+
 const catImages = ref([]);
 const selectedTag = ref('');
 const isModalVisible = ref(false);
@@ -33,12 +38,12 @@ const favorites = ref(new Set<string>());
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
   const uniqueTagsSet = new Set(tags);
-  uniqueTagsSet.add('お気に入り');
-  return [...uniqueTagsSet];
+  uniqueTagsSet.add(FAVORITE_TAG);
+  return [...uniqueTagsSet]; //再度...検索
 });
 
 const filteredCatImages = computed(() => {
-  if (selectedTag.value === 'お気に入り') {
+  if (selectedTag.value === FAVORITE_TAG) {
     return catImages.value.filter(catImage => favorites.value.has(catImage._id));
   }
   if (!selectedTag.value) {
@@ -49,7 +54,7 @@ const filteredCatImages = computed(() => {
 
 const fetchCatImages = async () => {
   try {
-    let response = await fetch('https://cataas.com/api/cats');
+    let response = await fetch(CAT_API_URL);
     if (!response.ok) {
       throw new Error('Network error');
     }
@@ -61,7 +66,7 @@ const fetchCatImages = async () => {
 }
 
 const openModal = (imageId: string) => {
-  selectedImageSrc.value = `https://cataas.com/cat/${imageId}`;
+  selectedImageSrc.value = `${IMAGE_URL_PREFIX}${imageId}`;
   isModalVisible.value = true;
 };
 
@@ -76,19 +81,31 @@ const toggleFavorite = (imageId: string) => {
   } else {
     favorites.value.add(imageId);
   }
+  saveFavoritesToLocalStorage();
 };
 
 const isFavorite = (imageId: string) => {
   return favorites.value.has(imageId);
 };
 
+const saveFavoritesToLocalStorage = () => {
+  const favoriteArray = Array.from(favorites.value);
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoriteArray));
+};
+
+const loadFavoritesFromLocalStorage = () => {
+  const favoriteArray = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+  favorites.value = new Set(favoriteArray);
+};
+
 onMounted(() => {
   fetchCatImages();
+  loadFavoritesFromLocalStorage();
 });
 </script>
 
 <style>
-.containar {
+.container {
   position: absolute;
   top: 50px;
   left: 20%;
