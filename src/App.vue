@@ -11,13 +11,18 @@
       <input type="text" v-model="searchQuery" placeholder="検索する">
     </div>
     <div class="images-container">
-      <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
+      <div v-for="catImage in paginatedCatImages" :key="catImage._id" class="image-card">
         <img :src="`${IMAGE_URL_PREFIX}${catImage._id}`" @click="openModal(catImage._id)" >
         <p>{{catImage.tags}}</p>
         <button @click="toggleFavorite(catImage._id)" :class="{ favorite: isFavorite(catImage._id) }">
           {{ isFavorite(catImage._id) ? 'お気に入りから削除' : 'お気に入りに追加' }}
         </button>
       </div>
+    </div>
+    <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 1">前へ</button>
+      <span>{{ currentPage }} / {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">次へ</button>
     </div>
     <Modal :isVisible="isModalVisible" :imageSrc="selectedImageSrc" @close="closeModal"/>
   </div>
@@ -31,6 +36,7 @@ const FAVORITE_TAG = 'お気に入り';
 const CAT_API_URL = 'https://cataas.com/api/cats';
 const IMAGE_URL_PREFIX = 'https://cataas.com/cat/';
 const FAVORITES_KEY = 'favorites';
+const ITEMS_PER_PAGE = 8;
 
 const catImages = ref([]);
 const selectedTag = ref('');
@@ -38,6 +44,7 @@ const isModalVisible = ref(false);
 const selectedImageSrc = ref('');
 const favorites = ref(new Set<string>());
 const searchQuery = ref('');
+const currentPage = ref(1);
 
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
@@ -62,6 +69,16 @@ const filteredCatImages = computed(() => {
   }
 
   return filteredImages;
+});
+
+const paginatedCatImages = computed(() => {
+  const startIndex = (currentPage.value - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  return filteredCatImages.value.slice(startIndex, endIndex);
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredCatImages.value.length / ITEMS_PER_PAGE);
 });
 
 const fetchCatImages = async () => {
@@ -108,6 +125,18 @@ const saveFavoritesToLocalStorage = () => {
 const loadFavoritesFromLocalStorage = () => {
   const favoriteArray = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
   favorites.value = new Set(favoriteArray);
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
 };
 
 onMounted(() => {
@@ -167,5 +196,15 @@ input[type="text"] {
   width: 20%;
   height: 20px;
   box-sizing: border-box;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.pagination button {
+  margin: 0 5px;
 }
 </style>
