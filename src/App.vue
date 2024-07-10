@@ -1,5 +1,5 @@
 <template>
-  <div class="containar">
+  <div class="container">
     <h1>猫</h1>
     <div>
       <select v-model="selectedTag">
@@ -33,8 +33,8 @@ const favorites = ref(new Set<string>());
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
   const uniqueTagsSet = new Set(tags);
-  uniqueTagsSet.add('お気に入り');
-  return [...uniqueTagsSet];
+  uniqueTagsSet.add('お気に入り'); //定数定義を行う const favorite = 'お気に入り'
+  return [...uniqueTagsSet]; //再度...検索
 });
 
 const filteredCatImages = computed(() => {
@@ -76,19 +76,31 @@ const toggleFavorite = (imageId: string) => {
   } else {
     favorites.value.add(imageId);
   }
+  saveFavoritesToLocalStorage();
 };
 
 const isFavorite = (imageId: string) => {
   return favorites.value.has(imageId);
 };
 
+const saveFavoritesToLocalStorage = () => {
+  const favoriteArray = Array.from(favorites.value);
+  localStorage.setItem('favorites', JSON.stringify(favoriteArray));
+};
+
+const loadFavoritesFromLocalStorage = () => {
+  const favoriteArray = JSON.parse(localStorage.getItem('favorites') || '[]');
+  favorites.value = new Set(favoriteArray);
+};
+
 onMounted(() => {
   fetchCatImages();
+  loadFavoritesFromLocalStorage();
 });
 </script>
 
 <style>
-.containar {
+.container {
   position: absolute;
   top: 50px;
   left: 20%;
