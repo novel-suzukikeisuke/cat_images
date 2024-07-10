@@ -1,5 +1,5 @@
 <template>
-  <div class="containar">
+  <div class="container">
     <h1>猫</h1>
     <div>
       <select v-model="selectedTag">
@@ -7,14 +7,22 @@
         <option v-for="tag in uniqueTags" :key="tag" :value="tag">{{ tag }}</option>
       </select>
     </div>
+    <div>
+      <input type="text" v-model="searchQuery" placeholder="検索する">
+    </div>
     <div class="images-container">
-      <div v-for="catImage in filteredCatImages" :key="catImage._id" class="image-card">
-        <img :src="`https://cataas.com/cat/${catImage._id}`" @click="openModal(catImage._id)" >
+      <div v-for="catImage in paginatedCatImages" :key="catImage._id" class="image-card">
+        <img :src="`${IMAGE_URL_PREFIX}${catImage._id}`" @click="openModal(catImage._id)" >
         <p>{{catImage.tags}}</p>
         <button @click="toggleFavorite(catImage._id)" :class="{ favorite: isFavorite(catImage._id) }">
           {{ isFavorite(catImage._id) ? 'お気に入りから削除' : 'お気に入りに追加' }}
         </button>
       </div>
+    </div>
+    <div class="pagination">
+      <button @click="prevPage" :disabled="currentPage === 1">前へ</button>
+      <span>{{ currentPage }} / {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">次へ</button>
     </div>
     <Modal :isVisible="isModalVisible" :imageSrc="selectedImageSrc" @close="closeModal"/>
   </div>
@@ -24,32 +32,58 @@
 import { ref, computed, onMounted } from 'vue';
 import Modal from './components/Modal.vue';
 
+const FAVORITE_TAG = 'お気に入り';
+const CAT_API_URL = 'https://cataas.com/api/cats';
+const IMAGE_URL_PREFIX = 'https://cataas.com/cat/';
+const FAVORITES_KEY = 'favorites';
+const ITEMS_PER_PAGE = 8;
+
 const catImages = ref([]);
 const selectedTag = ref('');
 const isModalVisible = ref(false);
 const selectedImageSrc = ref('');
 const favorites = ref(new Set<string>());
+const searchQuery = ref('');
+const currentPage = ref(1);
 
 const uniqueTags = computed(() => {
   const tags = catImages.value.flatMap(catImage => catImage.tags);
   const uniqueTagsSet = new Set(tags);
-  uniqueTagsSet.add('お気に入り');
+  uniqueTagsSet.add(FAVORITE_TAG);
   return [...uniqueTagsSet];
 });
 
 const filteredCatImages = computed(() => {
-  if (selectedTag.value === 'お気に入り') {
-    return catImages.value.filter(catImage => favorites.value.has(catImage._id));
+  let filteredImages = catImages.value;
+
+  if (selectedTag.value === FAVORITE_TAG) {
+    filteredImages = filteredImages.filter(catImage => favorites.value.has(catImage._id));
+  } else if (selectedTag.value) {
+    filteredImages = filteredImages.filter(catImage => catImage.tags.includes(selectedTag.value));
   }
-  if (!selectedTag.value) {
-    return catImages.value;
+
+  if (searchQuery.value) {
+    filteredImages = filteredImages.filter(catImage => 
+      catImage.tags.some(tag => tag.includes(searchQuery.value))
+    );
   }
-  return catImages.value.filter(catImage => catImage.tags.includes(selectedTag.value));
+
+  return filteredImages;
+});
+
+const paginatedCatImages = computed(() => {
+  const startIndex = (currentPage.value - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  return filteredCatImages.value.slice(startIndex, endIndex);
+});
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredCatImages.value.length / ITEMS_PER_PAGE);
 });
 
 const fetchCatImages = async () => {
   try {
-    let response = await fetch('https://cataas.com/api/cats');
+    let response = await fetch(CAT_API_URL);
     if (!response.ok) {
       throw new Error('Network error');
     }
@@ -61,7 +95,7 @@ const fetchCatImages = async () => {
 }
 
 const openModal = (imageId: string) => {
-  selectedImageSrc.value = `https://cataas.com/cat/${imageId}`;
+  selectedImageSrc.value = `${IMAGE_URL_PREFIX}${imageId}`;
   isModalVisible.value = true;
 };
 
@@ -76,19 +110,43 @@ const toggleFavorite = (imageId: string) => {
   } else {
     favorites.value.add(imageId);
   }
+  saveFavoritesToLocalStorage();
 };
 
 const isFavorite = (imageId: string) => {
   return favorites.value.has(imageId);
 };
 
+const saveFavoritesToLocalStorage = () => {
+  const favoriteArray = Array.from(favorites.value);
+  localStorage.setItem(FAVORITES_KEY, JSON.stringify(favoriteArray));
+};
+
+const loadFavoritesFromLocalStorage = () => {
+  const favoriteArray = JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]');
+  favorites.value = new Set(favoriteArray);
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+};
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+};
+
 onMounted(() => {
   fetchCatImages();
+  loadFavoritesFromLocalStorage();
 });
 </script>
 
 <style>
-.containar {
+.container {
   position: absolute;
   top: 50px;
   left: 20%;
@@ -130,5 +188,23 @@ button.favorite {
 
 button.favorite:hover {
   background-color: #ff3333;
+}
+
+input[type="text"] {
+  padding: 10px;
+  margin: 10px 0;
+  width: 20%;
+  height: 20px;
+  box-sizing: border-box;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.pagination button {
+  margin: 0 5px;
 }
 </style>
